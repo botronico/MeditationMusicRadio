@@ -1,0 +1,48 @@
+import requests
+from PIL import Image
+from io import BytesIO
+import base64
+
+# Step 1: Define your API key and the stable endpoint
+api_key = "Your API key here"
+url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-beta-v2-2-2/text-to-image"
+
+# Step 2: Set up the headers for the request
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json",
+}
+
+# Function to generate image from a text prompt using Stable Diffusion v2.2.2-XL Beta
+def generate_image(prompt, width=512, height=768, steps=30, cfg_scale=7.5):
+    payload = {
+        "text_prompts": [{"text": prompt}],
+        "cfg_scale": cfg_scale,
+        "height": height,
+        "width": width,
+        "samples": 1,
+        "steps": steps,
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+
+    if response.status_code == 200:
+        # Decode the base64-encoded image and display it
+        data = response.json()
+        image_data = data['artifacts'][0]['base64']
+        image = Image.open(BytesIO(base64.b64decode(image_data)))
+        
+        # Show the image
+        display(image)
+        
+        # Save the image locally
+        image.save("generated_image.png")
+        print("Image generated and saved as 'generated_image.png'")
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
+
+# Step 3: Ask the user for a prompt
+prompt = input("Describe the image: ")
+
+# Step 4: Generate the image with the user-provided prompt
+generate_image(prompt, width=512, height=768)
